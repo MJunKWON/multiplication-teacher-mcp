@@ -1,4 +1,8 @@
-from mcp.server.fastmcp import FastMCP, Tool
+from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp.tools.base import Tool
+from pydantic import BaseModel
+import os
+from typing import List
 
 app = FastMCP(
     name="구구단 선생님",
@@ -6,26 +10,19 @@ app = FastMCP(
     version="1.0.0"
 )
 
-@Tool(
-    name="multiplication_table",
-    description="주어진 숫자의 구구단을 계산합니다 (1-9)",
-    fn=None,
-    parameters={
-        "type": "object",
-        "properties": {
-            "number": {
-                "type": "integer",
-                "description": "구구단을 계산할 숫자 (1-9)",
-                "minimum": 1,
-                "maximum": 9
-            }
-        },
-        "required": ["number"]
-    },
-    fn_metadata=None,
-    is_async=False
-)
+class MultiplicationInput(BaseModel):
+    number: int
+
+@app.tool()
 def multiplication_table(number: int) -> str:
+    """주어진 숫자의 구구단을 계산합니다 (1-9)
+    
+    Args:
+        number: 구구단을 계산할 숫자 (1-9)
+        
+    Returns:
+        str: 구구단 결과
+    """
     if not 1 <= number <= 9:
         return "1부터 9까지의 숫자만 입력 가능합니다."
     
