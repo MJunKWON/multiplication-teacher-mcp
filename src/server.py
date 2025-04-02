@@ -1,8 +1,18 @@
 from mcp.server.fastmcp import FastMCP
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 # MCP 서버 생성
 app = FastMCP("구구단 선생님")
+
+# CORS 설정 추가
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.tool()
 def multiply(number: int) -> str:
@@ -20,4 +30,4 @@ def multiply(number: int) -> str:
     return "\n".join([f"{number} x {i} = {number * i}" for i in range(1, 10)])
 
 if __name__ == "__main__":
-    app.run(transport="sse")  # SSE 전송 방식 사용
+    app.run(transport="sse", host="0.0.0.0", port=8000)
