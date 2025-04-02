@@ -115,7 +115,12 @@ def create_app():
                     )
 
                 # 메시지 처리
-                await sse.handle_post_message(request)
+                await sse.handle_post_message(
+                    scope=request.scope,
+                    receive=request.receive,
+                    send=request._send
+                )
+                
                 return JSONResponse(
                     status_code=202,
                     content={
