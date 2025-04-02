@@ -3,6 +3,7 @@ from mcp.server.sse import SseServerTransport
 from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
 from starlette.routing import Route, Mount
+from starlette.responses import Response
 import uvicorn
 import logging
 
@@ -33,6 +34,28 @@ def create_app():
     sse = SseServerTransport("/sse")
 
     async def handle_sse(request):
+        if request.method == "OPTIONS":
+            return Response(
+                status_code=200,
+                headers={
+                    "Access-Control-Allow-Origin": "http://localhost:3000",
+                    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+                    "Access-Control-Allow-Headers": "*",
+                    "Access-Control-Allow-Credentials": "true",
+                }
+            )
+            
+        if request.method not in ["GET", "POST"]:
+            return Response(
+                status_code=405,
+                headers={
+                    "Access-Control-Allow-Origin": "http://localhost:3000",
+                    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+                    "Access-Control-Allow-Headers": "*",
+                    "Access-Control-Allow-Credentials": "true",
+                }
+            )
+
         async with sse.connect_sse(
             request.scope,
             request.receive,
@@ -52,12 +75,12 @@ def create_app():
         CORSMiddleware,
         allow_origins=["http://localhost:3000"],
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["*"],
     )
 
     # 라우트 설정
-    app.add_route("/sse", handle_sse)
+    app.add_route("/sse", handle_sse, methods=["GET", "POST", "OPTIONS"])
     app.mount("/messages", app=sse.handle_post_message)
     
     return app
