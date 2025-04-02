@@ -1,4 +1,6 @@
 from mcp.server.fastmcp import FastMCP
+from starlette.applications import Starlette
+from starlette.routing import Mount
 
 # MCP 서버 생성
 app = FastMCP("구구단 선생님")
@@ -18,6 +20,13 @@ def multiply(number: int) -> str:
     
     return "\n".join([f"{number} x {i} = {number * i}" for i in range(1, 10)])
 
+# Starlette 앱에 SSE 엔드포인트 마운트
+starlette_app = Starlette(
+    routes=[
+        Mount("/", app=app.sse_app()),
+    ]
+)
+
 if __name__ == "__main__":
-    # SSE 전송 방식으로만 실행
-    app.run(transport="sse")
+    import uvicorn
+    uvicorn.run(starlette_app, host="0.0.0.0", port=8000)
