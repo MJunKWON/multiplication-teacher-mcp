@@ -1,3 +1,4 @@
+import os
 from mcp.server.fastmcp import FastMCP
 
 # MCP 서버 생성
@@ -19,4 +20,6 @@ def multiply(number: int) -> str:
     return "\n".join([f"{number} x {i} = {number * i}" for i in range(1, 10)])
 
 if __name__ == "__main__":
-    app.run(transport="sse")
+    # Railway에서 제공하는 PORT 환경변수 사용
+    port = int(os.getenv("PORT", "8000"))
+    app.run(transport="sse", host="0.0.0.0", port=port)
