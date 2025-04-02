@@ -1,3 +1,4 @@
+import os
 from mcp.server.fastmcp import FastMCP
 
 # MCP 서버 생성
