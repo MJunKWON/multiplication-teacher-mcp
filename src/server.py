@@ -1,4 +1,5 @@
 from mcp.server.fastmcp import FastMCP
+import uvicorn
 
 # MCP 서버 생성
 app = FastMCP("구구단 선생님")
@@ -19,4 +20,4 @@ def multiply(number: int) -> str:
     return "\n".join([f"{number} x {i} = {number * i}" for i in range(1, 10)])
 
 if __name__ == "__main__":
-    app.run()
+    app.run(transport="sse")  # SSE 전송 방식 사용
