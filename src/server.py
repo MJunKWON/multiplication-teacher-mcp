@@ -6,7 +6,6 @@ from starlette.routing import Route, Mount
 from starlette.responses import Response
 import uvicorn
 import logging
-import json
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -35,67 +34,37 @@ def create_app():
     sse = SseServerTransport("/sse")
 
     async def handle_sse(request):
-        # CORS 헤더 설정
-        cors_headers = {
-            "Access-Control-Allow-Origin": "http://localhost:3000",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-            "Access-Control-Allow-Credentials": "true",
-        }
-
-        # OPTIONS 요청 처리
         if request.method == "OPTIONS":
-            return Response(status_code=200, headers=cors_headers)
-
-        # POST 요청이 아닌 경우 처리
-        if request.method != "POST":
+            return Response(
+                status_code=200,
+                headers={
+                    "Access-Control-Allow-Origin": "http://localhost:3000",
+                    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+                    "Access-Control-Allow-Headers": "*",
+                    "Access-Control-Allow-Credentials": "true",
+                }
+            )
+            
+        if request.method not in ["GET", "POST"]:
             return Response(
                 status_code=405,
-                headers={**cors_headers, "Allow": "POST, OPTIONS"}
+                headers={
+                    "Access-Control-Allow-Origin": "http://localhost:3000",
+                    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+                    "Access-Control-Allow-Headers": "*",
+                    "Access-Control-Allow-Credentials": "true",
+                }
             )
 
-        # Content-Type 확인
-        if request.headers.get("content-type") != "application/json":
-            return Response(
-                status_code=415,
-                headers=cors_headers,
-                content="Content-Type must be application/json"
-            )
-
-        try:
-            # 요청 본문 파싱
-            body = await request.json()
-            if "message" not in body:
-                return Response(
-                    status_code=400,
-                    headers=cors_headers,
-                    content="Request body must contain 'message' field"
-                )
-            
-            # SSE 연결 설정
-            async with sse.connect_sse(
-                request.scope,
-                request.receive,
-                request._send,
-            ) as (read_stream, write_stream):
-                await mcp._mcp_server.run(
-                    read_stream,
-                    write_stream,
-                    mcp._mcp_server.create_initialization_options(),
-                )
-
-        except json.JSONDecodeError:
-            return Response(
-                status_code=400,
-                headers=cors_headers,
-                content="Invalid JSON in request body"
-            )
-        except Exception as e:
-            log.error(f"Error handling SSE request: {str(e)}")
-            return Response(
-                status_code=500,
-                headers=cors_headers,
-                content="Internal server error"
+        async with sse.connect_sse(
+            request.scope,
+            request.receive,
+            request._send,
+        ) as (read_stream, write_stream):
+            await mcp._mcp_server.run(
+                read_stream,
+                write_stream,
+                mcp._mcp_server.create_initialization_options(),
             )
 
     # Starlette 앱 생성
@@ -104,17 +73,14 @@ def create_app():
     # CORS 미들웨어 추가
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "http://localhost:3000",
-            "http://192.168.219.231:3000"
-        ],
+        allow_origins=["http://localhost:3000"],
         allow_credentials=True,
-        allow_methods=["POST", "OPTIONS"],
-        allow_headers=["Content-Type"],
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["*"],
     )
 
     # 라우트 설정
-    app.add_route("/sse", handle_sse, methods=["POST", "OPTIONS"])
+    app.add_route("/sse", handle_sse, methods=["GET", "POST", "OPTIONS"])
     app.mount("/messages", app=sse.handle_post_message)
     
     return app
