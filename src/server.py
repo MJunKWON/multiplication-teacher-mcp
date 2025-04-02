@@ -73,7 +73,6 @@ def create_app():
                         write_stream,
                         mcp._mcp_server.create_initialization_options(),
                     )
-                return Response(status_code=200, headers=cors_headers)
             except Exception as e:
                 log.error(f"SSE 연결 에러: {str(e)}")
                 return JSONResponse(
@@ -85,7 +84,22 @@ def create_app():
                     headers=cors_headers
                 )
 
-        # POST 요청 처리 (메시지 전송)
+        return Response(status_code=405, headers=cors_headers)
+
+    async def handle_messages(request):
+        # CORS 헤더
+        cors_headers = {
+            "Access-Control-Allow-Origin": "http://localhost:3000",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Credentials": "true",
+        }
+
+        # OPTIONS 요청 처리
+        if request.method == "OPTIONS":
+            return Response(status_code=200, headers=cors_headers)
+
+        # POST 요청 처리
         if request.method == "POST":
             try:
                 body = await request.json()
@@ -95,14 +109,15 @@ def create_app():
                         status_code=400,
                         content={
                             "status": "error",
-                            "message": "메시지가 없습니다."
+                            "message": "메시지가 없습니다. 'message' 필드가 필요합니다."
                         },
                         headers=cors_headers
                     )
-                
+
                 # 메시지 처리
-                response = await sse.handle_post_message(request)
+                await sse.handle_post_message(request)
                 return JSONResponse(
+                    status_code=202,
                     content={
                         "status": "success",
                         "message": "메시지가 전송되었습니다."
@@ -114,7 +129,7 @@ def create_app():
                     status_code=400,
                     content={
                         "status": "error",
-                        "message": "잘못된 JSON 형식입니다."
+                        "message": "잘못된 JSON 형식입니다. Content-Type이 application/json인지 확인해주세요."
                     },
                     headers=cors_headers
                 )
@@ -129,11 +144,7 @@ def create_app():
                     headers=cors_headers
                 )
 
-        # 허용되지 않는 메서드
-        return Response(
-            status_code=405,
-            headers=cors_headers
-        )
+        return Response(status_code=405, headers=cors_headers)
 
     # Starlette 앱 생성
     app = Starlette(debug=True)
@@ -155,7 +166,8 @@ def create_app():
     )
 
     # 라우트 설정
-    app.add_route("/sse", handle_sse, methods=["GET", "POST", "OPTIONS"])
+    app.add_route("/sse", handle_sse, methods=["GET", "OPTIONS"])
+    app.add_route("/messages", handle_messages, methods=["POST", "OPTIONS"])
     
     return app
 
