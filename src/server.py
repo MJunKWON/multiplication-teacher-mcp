@@ -6,10 +6,7 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 # MCP 서버 생성 (기본 설정 사용)
-app = FastMCP(
-    name="구구단 선생님",
-    log_level="INFO"
-)
+app = FastMCP("구구단 선생님")
 
 @app.tool()
 def multiply(number: int) -> str:
@@ -28,11 +25,4 @@ def multiply(number: int) -> str:
 
 if __name__ == "__main__":
     log.info(f"FastMCP 서버 '{app.name}' 시작...")
-    
-    try:
-        # SSE 전송 방식으로 서버 실행
-        app.run(transport="sse")
-    except Exception as e:
-        log.exception("서버 실행 중 오류 발생")
-    finally:
-        log.info("서버 종료")
+    app.run(transport="sse")
