@@ -1,5 +1,19 @@
 import os
 from mcp.server.fastmcp import FastMCP
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+# FastAPI 앱 생성
+api = FastAPI()
+
+# CORS 설정
+api.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # MCP 서버 생성
 app = FastMCP("구구단 선생님")
@@ -21,5 +35,6 @@ def multiply(number: int) -> str:
 
 if __name__ == "__main__":
     # Railway에서 제공하는 PORT 환경변수 사용
-    port = int(os.getenv("PORT", "8000"))
+    port = int(os.getenv("PORT", "3000"))
+    # SSE 전송 방식으로 실행
     app.run(transport="sse", host="0.0.0.0", port=port)
