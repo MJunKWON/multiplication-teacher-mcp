@@ -1,43 +1,52 @@
-# 구구단 선생님 MCP 서버
+# 구구단 선생님 MCP
 
-구구단을 가르치는 MCP 서버입니다. Claude가 직접 호출할 수 있는 도구를 제공합니다.
+구구단을 계산해주는 MCP 서버입니다.
 
 ## 기능
 
-* 1단부터 9단까지의 구구단 계산
-* MCP 도구를 통한 자동 호출
-* Docker 컨테이너 지원
+- 1-9단까지의 구구단을 계산할 수 있습니다.
+- Claude Desktop과 연동하여 사용할 수 있습니다.
 
-## 설치 및 실행
+## 설치 방법
 
-### 로컬 실행
-
+1. Python 3.12 이상이 필요합니다.
+2. 가상환경을 생성하고 활성화합니다:
 ```bash
-# 의존성 설치
-pip install -r requirements.txt
-pip install git+https://github.com/modelcontextprotocol/python-sdk.git
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+```
 
-# 서버 실행
+3. 필요한 패키지를 설치합니다:
+```bash
+pip install -r requirements.txt
+```
+
+## 사용 방법
+
+1. 서버 실행:
+```bash
 python src/server.py
 ```
 
-### Docker 실행
-
-```bash
-# 이미지 빌드
-docker build -t multiplication-teacher .
-
-# 컨테이너 실행
-docker run -p 8000:8000 multiplication-teacher
+2. Claude Desktop 설정:
+```json
+{
+  "mcpServers": {
+    "구구단": {
+      "command": "python",
+      "args": ["src/server.py"]
+    }
+  }
+}
 ```
 
-## 사용 예시
+3. Claude Desktop에서 다음과 같이 사용할 수 있습니다:
+   - "7단 구구단을 알려줘"
+   - "3단을 계산해줘"
 
-1. "7단을 알려주세요"
-2. "구구단 중에서 3단이 궁금해요"
-3. "9단을 보여주세요"
+## Docker 사용
 
-## 주의사항
-
-* 1부터 9까지의 숫자만 입력 가능합니다.
-* 다른 숫자를 입력하면 오류 메시지가 반환됩니다.
+```bash
+docker build -t multiplication-teacher .
+docker run -p 8000:8000 multiplication-teacher
+```
