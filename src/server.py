@@ -5,10 +5,10 @@ import logging
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-# MCP 서버 생성 (명시적 경로 설정)
+# MCP 서버 생성 (SSE 엔드포인트 설정)
 app = FastMCP(
     name="구구단 선생님",
-    sse_path="/messages/",  # SSE 연결용 GET 엔드포인트
+    sse_path="/sse",  # SSE 연결용 GET 엔드포인트
     message_path="/messages/",  # 메시지 전송용 POST 엔드포인트
     log_level="INFO"
 )
