@@ -7,6 +7,7 @@ from starlette.responses import Response, JSONResponse
 import uvicorn
 import logging
 import json
+from uuid import UUID
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -102,6 +103,31 @@ def create_app():
         # POST 요청 처리
         if request.method == "POST":
             try:
+                # session_id 확인
+                session_id_param = request.query_params.get("session_id")
+                if not session_id_param:
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "status": "error",
+                            "message": "session_id가 필요합니다."
+                        },
+                        headers=cors_headers
+                    )
+
+                try:
+                    session_id = UUID(session_id_param)
+                except ValueError:
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "status": "error",
+                            "message": "잘못된 session_id 형식입니다."
+                        },
+                        headers=cors_headers
+                    )
+
+                # 메시지 본문 확인
                 body = await request.json()
                 message = body.get("message")
                 if not message:
