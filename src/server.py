@@ -1,5 +1,6 @@
 import os
 from mcp.server.fastmcp import FastMCP
+import uvicorn
 
 # MCP 서버 생성
 app = FastMCP("구구단 선생님")
@@ -22,3 +23,11 @@ def multiply(number: int) -> str:
 if __name__ == "__main__":
     # SSE 전송 방식으로 실행
     app.run(transport="sse")
+    
+    # Uvicorn으로 서버 실행 (포트 3000)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=3000,
+        log_level="info"
+    )
