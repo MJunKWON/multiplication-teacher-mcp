@@ -141,20 +141,39 @@ def create_app():
                     )
 
                 # 메시지 처리
-                await sse.handle_post_message(
-                    scope=request.scope,
-                    receive=request.receive,
-                    send=request._send
-                )
+                log.info(f"세션 ID {session_id_param}로부터 메시지 수신: {message}")
                 
-                return JSONResponse(
-                    status_code=202,
-                    content={
-                        "status": "success",
-                        "message": "메시지가 전송되었습니다."
-                    },
-                    headers=cors_headers
-                )
+                # URL에 세션 ID를 포함시켜 scope를 수정합니다
+                modified_scope = request.scope.copy()
+                modified_scope["query_string"] = f"session_id={session_id_param}".encode()
+                
+                try:
+                    # 메시지를 MCP 서버에 전달
+                    await sse.handle_post_message(
+                        scope=modified_scope,
+                        receive=request.receive,
+                        send=request._send
+                    )
+                    log.info("메시지가 MCP 서버에 전달되었습니다.")
+                    
+                    return JSONResponse(
+                        status_code=202,
+                        content={
+                            "status": "success",
+                            "message": "메시지가 전송되었습니다."
+                        },
+                        headers=cors_headers
+                    )
+                except Exception as e:
+                    log.error(f"MCP 메시지 전달 실패: {str(e)}")
+                    return JSONResponse(
+                        status_code=500,
+                        content={
+                            "status": "error",
+                            "message": f"MCP 메시지 전달 실패: {str(e)}"
+                        },
+                        headers=cors_headers
+                    )
             except json.JSONDecodeError:
                 return JSONResponse(
                     status_code=400,
